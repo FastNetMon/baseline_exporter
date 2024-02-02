@@ -5,18 +5,19 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/ClickHouse/clickhouse-go"
-	"github.com/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	"os"
 	"strings"
+
+	_ "github.com/ClickHouse/clickhouse-go"
+	"github.com/pkg/errors"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 var fast_logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -215,7 +216,14 @@ func main() {
 	// Read password from file
 	global_db_conf.Database_password = string(fastnetmon_password_binary)
 
-	mongodb_full_address := fmt.Sprintf("%s:%d", global_db_conf.Database_address, global_db_conf.Mongodb_port)
+	mongodb_address := global_db_conf.Database_address
+
+	// Add brackets for IPv6 addresses
+	if strings.Contains(mongodb_address, ":") {
+		mongodb_address = "[" + mongodb_address + "]"
+	}
+
+	mongodb_full_address := fmt.Sprintf("%s:%d", mongodb_address, global_db_conf.Mongodb_port)
 
 	// Estasblish connection to MongoDB usin new driver
 	mongo_uri := "mongodb://" + global_db_conf.Database_username + ":" + global_db_conf.Database_password + "@" + mongodb_full_address
